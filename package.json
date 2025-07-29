@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "axios": "^1.6.0",
+    "crypto-browserify": "^3.12.1",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.292.0",
     "marked": "^16.1.1",
