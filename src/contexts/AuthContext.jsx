@@ -10,27 +10,22 @@ export function AuthProvider({ children }) {
 
   const checkAuth = () => {
     console.log('=== CHECKING AUTHENTICATION STATUS ===');
-
     const token = localStorage.getItem('token');
     const tokenExpiry = localStorage.getItem('xero_token_expiry');
     const userInfo = localStorage.getItem('xero_user_info');
 
     console.log('Token exists:', !!token);
     console.log('Token expiry:', tokenExpiry);
-    console.log('User info exists:', !!userInfo);
 
     if (token && tokenExpiry) {
       const expiryTime = parseInt(tokenExpiry);
       const isExpired = Date.now() > expiryTime;
 
       console.log('Token expired:', isExpired);
-      console.log('Current time:', new Date().toISOString());
-      console.log('Expiry time:', new Date(expiryTime).toISOString());
 
       if (!isExpired) {
         const userData = { token };
 
-        // Add user info if available
         if (userInfo) {
           try {
             const parsedUserInfo = JSON.parse(userInfo);
@@ -47,13 +42,18 @@ export function AuthProvider({ children }) {
         console.log('✅ User is authenticated');
         return true;
       } else {
-        console.log('❌ Token expired, clearing auth');
-        logout();
+        console.log('❌ Token expired, attempting refresh');
+        // Try to refresh token automatically
+        refreshToken().then((success) => {
+          if (!success) {
+            logout();
+          }
+        });
         return false;
       }
     } else if (token) {
       // Token exists but no expiry - assume valid for backward compatibility
-      console.log('⚠️  Token exists but no expiry time found');
+      console.log('⚠️ Token exists but no expiry time found');
       setUser({ token });
       return true;
     } else {
@@ -62,6 +62,7 @@ export function AuthProvider({ children }) {
       return false;
     }
   };
+
 
   useEffect(() => {
     console.log('=== AUTH PROVIDER INITIALIZING ===');

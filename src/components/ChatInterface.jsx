@@ -44,10 +44,25 @@ export default function ChatInterface() {
     setLoading(true);
 
     try {
+      // Get token directly from localStorage
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await axios.post(
         '/api/chat/message',
-        { message: input, conversationId: 'default' },
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+        {
+          message: input,
+          conversationId: 'default'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
 
       const botMessage = {
@@ -60,6 +75,22 @@ export default function ChatInterface() {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
+      console.error('Chat error:', error);
+
+      // Check if it's an authentication error
+      if (error.response?.status === 401) {
+        // Try to refresh token first
+        const refreshed = await refreshTokenIfNeeded();
+        if (refreshed) {
+          // Retry the request
+          return sendMessage();
+        } else {
+          // Redirect to login
+          window.location.href = '/login';
+          return;
+        }
+      }
+
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         content: 'Sorry, I encountered an error. Please try again.',
@@ -70,6 +101,22 @@ export default function ChatInterface() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const refreshTokenIfNeeded = async () => {
+    const tokenExpiry = localStorage.getItem('xero_token_expiry');
+    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+      console.log('Token expired, refreshing...');
+      const { refreshToken } = useAuth(); 
+      try {
+        await refreshToken();
+        return true;
+      } catch (error) {
+        console.error('Token refresh error:', error);
+        return false;
+      }
+    }
+    return false;
   };
 
   const handleKeyPress = (e) => {
