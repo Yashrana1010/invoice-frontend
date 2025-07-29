@@ -51,8 +51,7 @@ export default function ChatInterface() {
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.post(
-        '/api/chat/message',
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/message`,
         {
           message: input,
           conversationId: 'default'
@@ -102,7 +101,7 @@ export default function ChatInterface() {
       setLoading(false);
     }
   };
-  
+
   const refreshTokenIfNeeded = async () => {
     const tokenExpiry = localStorage.getItem('xero_token_expiry');
     if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
