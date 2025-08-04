@@ -162,8 +162,23 @@ export default function XeroCallback() {
           console.error('Status:', error.response.status);
           console.error('Data:', error.response.data);
 
-          if (error.response.data && error.response.data.error) {
-            errorMessage = error.response.data.error;
+          const errorData = error.response.data;
+
+          // Handle specific Xero error codes
+          if (errorData && errorData.xeroErrorCode === 'invalid_grant') {
+            errorMessage = '🔄 Authorization Code Expired';
+            console.error('Authorization code has expired or been used. User needs to restart OAuth flow.');
+            setError('Your authorization has expired. Please try connecting to Xero again.');
+            setTimeout(() => navigate('/login?error=code_expired'), 2000);
+            return;
+          } else if (errorData && errorData.xeroErrorCode === 'unauthorized_client') {
+            errorMessage = '⚙️ App Configuration Issue';
+            console.error('Xero app configuration problem');
+            setError('There\'s a configuration issue with the Xero app. Please contact support.');
+            setTimeout(() => navigate('/login?error=config_issue'), 3000);
+            return;
+          } else if (errorData && errorData.error) {
+            errorMessage = errorData.error;
           } else if (error.response.status === 400) {
             errorMessage = 'Bad Request - Invalid authorization code or configuration';
           } else if (error.response.status === 401) {
