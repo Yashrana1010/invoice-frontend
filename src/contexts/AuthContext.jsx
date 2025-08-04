@@ -104,7 +104,7 @@ export function AuthProvider({ children }) {
     window.addEventListener('storage', handleStorageChange);
 
     // Expose checkAuth globally for XeroCallback
-    window.authContext = { checkAuth };
+    window.authContext = { checkAuth, refreshToken };
 
     return () => {
       window.removeEventListener('xero-auth-success', handleAuthSuccess);

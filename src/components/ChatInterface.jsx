@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Paperclip, X } from 'lucide-react';
 import axios from 'axios';
 import FileUpload from './FileUpload';
+import InvoiceDisplay from './InvoiceDisplay';
 import { useAuth } from '../contexts/AuthContext';
 import { marked } from 'marked';
 
@@ -11,6 +12,25 @@ marked.setOptions({
 });
 
 export default function ChatInterface() {
+  // Helper function to safely handle message content
+  const safeMarkdown = (content) => {
+    if (!content || typeof content !== 'string') {
+      return 'No content available';
+    }
+    return content.trim() || 'Empty message';
+  };
+
+  // Helper function to safely render markdown
+  const renderMarkdown = (content) => {
+    try {
+      const safeContent = safeMarkdown(content);
+      return marked(safeContent);
+    } catch (error) {
+      console.error('Markdown rendering error:', error);
+      return safeContent; // Return plain text as fallback
+    }
+  };
+
   const [messages, setMessages] = useState([
     {
       id: '1',
@@ -64,14 +84,22 @@ export default function ChatInterface() {
         }
       );
 
+      console.log('Backend response:', response.data); // Debug log
+
       const botMessage = {
         id: (Date.now() + 1).toString(),
-        content: response.data.message,
+        content: response.data.message || response.data.content || 'No response received',
         sender: 'bot',
         timestamp: new Date(),
         data: response.data.data,
-        hideData: response.data.hideData
+        hideData: response.data.hideData,
+        invoiceData: response.data.invoiceData // Add invoice data if present
       };
+
+      // Debug: log if content is missing
+      if (!response.data.message && !response.data.content) {
+        console.warn('Bot message has no content:', response.data);
+      }
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
@@ -79,21 +107,67 @@ export default function ChatInterface() {
 
       // Check if it's an authentication error
       if (error.response?.status === 401) {
+        console.log('Authentication error detected, attempting token refresh...');
+
         // Try to refresh token first
         const refreshed = await refreshTokenIfNeeded();
         if (refreshed) {
-          // Retry the request
-          return sendMessage();
-        } else {
-          // Redirect to login
-          window.location.href = '/login';
-          return;
+          console.log('Token refreshed successfully, retrying request...');
+          // Retry the request with the new token
+          const newToken = localStorage.getItem('token');
+          if (newToken) {
+            try {
+              const retryResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/message`,
+                {
+                  message: input,
+                  conversationId: 'default'
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${newToken}`,
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+
+              const botMessage = {
+                id: (Date.now() + 1).toString(),
+                content: retryResponse.data.message || retryResponse.data.content || 'No response received',
+                sender: 'bot',
+                timestamp: new Date(),
+                data: retryResponse.data.data,
+                hideData: retryResponse.data.hideData,
+                invoiceData: retryResponse.data.invoiceData
+              };
+
+              setMessages(prev => [...prev, botMessage]);
+              return;
+            } catch (retryError) {
+              console.error('Retry after token refresh failed:', retryError);
+            }
+          }
         }
+
+        // If refresh failed or retry failed, show auth error
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: '🔐 **Authentication Required**\n\nYour session has expired. Please log in again to continue using the chat.\n\n[Click here to login](/login)',
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+
+        // Redirect to login after a delay
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 3000);
+        return;
       }
 
+      // Handle other errors
       const errorMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Your Xero token may have expired or is invalid. Please re-authenticate.',
+        content: `❌ **Error occurred**: ${error.response?.data?.message || error.message}\n\nPlease try again or contact support if the issue persists.`,
         sender: 'bot',
         timestamp: new Date()
       };
@@ -104,19 +178,26 @@ export default function ChatInterface() {
   };
 
   const refreshTokenIfNeeded = async () => {
-    const tokenExpiry = localStorage.getItem('xero_token_expiry');
-    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
-      console.log('Token expired, refreshing...');
-      const { refreshToken } = useAuth();
-      try {
-        await refreshToken();
-        return true;
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        return false;
+    try {
+      const tokenExpiry = localStorage.getItem('xero_token_expiry');
+      if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+        console.log('Token expired, refreshing...');
+
+        // Use the auth context refresh function
+        const authContext = window.authContext;
+        if (authContext && authContext.refreshToken) {
+          await authContext.refreshToken();
+          return true;
+        } else {
+          console.error('Auth context not available');
+          return false;
+        }
       }
+      return true; // Token is still valid
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return false;
     }
-    return false;
   };
 
   const handleKeyPress = (e) => {
@@ -206,7 +287,8 @@ export default function ChatInterface() {
             key={message.id}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`flex items-start space-x-3 max-w-[85%] sm:max-w-md md:max-w-2xl ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+            <div className={`flex items-start space-x-3 ${message.invoiceData ? 'max-w-[95%] sm:max-w-4xl' : 'max-w-[85%] sm:max-w-md md:max-w-2xl'
+              } ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
               }`}>
               {/* Avatar */}
               <div className="flex-shrink-0">
@@ -233,9 +315,16 @@ export default function ChatInterface() {
                     color: message.sender === 'user' ? 'white' : 'inherit'
                   }}
                   dangerouslySetInnerHTML={{
-                    __html: marked(message.content || 'Please Login Again!')
+                    __html: renderMarkdown(message.content)
                   }}
                 />
+
+                {/* Invoice Display */}
+                {message.invoiceData && (
+                  <div className="mt-4">
+                    <InvoiceDisplay invoiceData={message.invoiceData} />
+                  </div>
+                )}
 
                 {/* File upload data display */}
                 {/* {message.data && message.type === 'file-upload' && (
