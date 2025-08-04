@@ -75,18 +75,21 @@ export default function Login() {
     // Clear any existing processed URLs to prevent duplicate callback issues
     sessionStorage.removeItem('xero_last_processed_url');
 
-    const authUrl = `https://login.xero.com/identity/connect/authorize?` +
-      `response_type=code&` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `scope=openid profile email accounting.settings accounting.reports.read accounting.journals.read accounting.contacts accounting.attachments&` +
-      `state=${state}`;
+    // Generate Auth URL using URL constructor (same as test script)
+    const authUrl = new URL('https://login.xero.com/identity/connect/authorize');
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('client_id', clientId);
+    authUrl.searchParams.append('redirect_uri', redirectUri);
+
+    const scopes = 'openid profile email accounting.settings accounting.reports.read accounting.journals.read accounting.contacts accounting.attachments';
+    authUrl.searchParams.append('scope', scopes);
+    authUrl.searchParams.append('state', state);
 
     console.log('OAuth URL created, redirecting...');
-    console.log('Auth URL:', authUrl.replace(clientId, `${clientId.substring(0, 8)}...`));
+    console.log('Auth URL:', authUrl.toString().replace(clientId, `${clientId.substring(0, 8)}...`));
 
     // Redirect to Xero OAuth
-    window.location.href = authUrl;
+    window.location.href = authUrl.toString();
   };
 
   // Show loading if auth is still being checked
