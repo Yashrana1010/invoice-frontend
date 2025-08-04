@@ -135,8 +135,8 @@ export function AuthProvider({ children }) {
     console.log('=== ATTEMPTING TOKEN REFRESH ===');
 
     const refreshToken = localStorage.getItem('xero_refresh_token');
-    const clientId = import.meta.env.VITE_XERO_CLIENT_ID;
-    const clientSecret = import.meta.env.VITE_XERO_CLIENT_SECRET;
+    const clientId = "6B959FB316CE4F5A8A7DC2BDCF5007F3";
+    const clientSecret = "hRMrh5ZvDN1S2QwxaxIKBoiYkP4qo5fIcLJJFxv9UfgQwTpz";
 
     if (!refreshToken) {
       console.log('❌ No refresh token available');

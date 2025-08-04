@@ -71,7 +71,7 @@ export default function ChatInterface() {
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/message`,
+      const response = await axios.post(`https://api.invoicemanager.kaifoundry.com/api/chat/message`,
         {
           message: input,
           conversationId: 'default'
@@ -117,7 +117,7 @@ export default function ChatInterface() {
           const newToken = localStorage.getItem('token');
           if (newToken) {
             try {
-              const retryResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/chat/message`,
+              const retryResponse = await axios.post(`https://api.invoicemanager.kaifoundry.com/api/chat/message`,
                 {
                   message: input,
                   conversationId: 'default'
