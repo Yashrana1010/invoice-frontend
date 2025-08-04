@@ -72,10 +72,10 @@ export default function FileUpload({ onUploadSuccess, onUploadError }) {
 
       const formData = new FormData();
       formData.append('document', file);
-      formData.append('autoCreate', 'false');
+      formData.append('autoCreate', 'true'); // Auto-create invoice in Xero
 
       const accessToken = localStorage.getItem("token");
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/upload/extract`, formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/upload/invoice`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${accessToken}`,
@@ -144,7 +144,7 @@ export default function FileUpload({ onUploadSuccess, onUploadError }) {
             {uploading ? (
               <div className="flex flex-col items-center">
                 <Loader className="w-12 h-12 text-primary-500 animate-spin mb-4" />
-                <p className="text-lg font-medium text-gray-700 mb-2">Processing document...</p>
+                <p className="text-lg font-medium text-gray-700 mb-2">Processing document and creating Xero invoice...</p>
                 <p className="text-sm text-gray-500">This may take a few moments</p>
               </div>
             ) : (
@@ -190,7 +190,7 @@ export default function FileUpload({ onUploadSuccess, onUploadError }) {
                 {uploadResult.success ? (
                   <div>
                     <p className="text-green-800 font-medium mb-3">
-                      Document processed successfully!
+                      Document processed and invoice created in Xero successfully!
                     </p>
                     {uploadResult.data.extractedData && (
                       <div className="space-y-2 text-sm">

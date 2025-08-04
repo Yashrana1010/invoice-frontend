@@ -113,12 +113,6 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const login = (email, password) => {
-    // Your login logic here
-    // On success: setUser({ ...userData });
-    console.log('Manual login called with:', email);
-  };
-
   const logout = () => {
     console.log('=== LOGGING OUT ===');
 
@@ -189,7 +183,6 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
-    login,
     logout,
     checkAuth,
     refreshToken,

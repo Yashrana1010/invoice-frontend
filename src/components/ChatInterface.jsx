@@ -69,7 +69,8 @@ export default function ChatInterface() {
         content: response.data.message,
         sender: 'bot',
         timestamp: new Date(),
-        data: response.data.data
+        data: response.data.data,
+        hideData: response.data.hideData
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -92,7 +93,7 @@ export default function ChatInterface() {
 
       const errorMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: 'Your Xero token may have expired or is invalid. Please re-authenticate.',
         sender: 'bot',
         timestamp: new Date()
       };
@@ -106,7 +107,7 @@ export default function ChatInterface() {
     const tokenExpiry = localStorage.getItem('xero_token_expiry');
     if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
       console.log('Token expired, refreshing...');
-      const { refreshToken } = useAuth(); 
+      const { refreshToken } = useAuth();
       try {
         await refreshToken();
         return true;
@@ -237,7 +238,7 @@ export default function ChatInterface() {
                 />
 
                 {/* File upload data display */}
-                {message.data && message.type === 'file-upload' && (
+                {/* {message.data && message.type === 'file-upload' && (
                   <div className="mt-3 p-3 bg-white/10 rounded-lg border border-white/20">
                     <div className="text-xs font-medium mb-2 opacity-90">Extracted Data:</div>
                     <div className="text-xs font-mono bg-black/10 p-2 rounded overflow-x-auto">
@@ -246,16 +247,7 @@ export default function ChatInterface() {
                       </pre>
                     </div>
                   </div>
-                )}
-
-                {/* Other data display */}
-                {message.data && message.type !== 'file-upload' && (
-                  <div className="mt-2 p-2 bg-white/10 rounded text-xs overflow-x-auto">
-                    <pre className="whitespace-pre-wrap break-all font-mono opacity-90">
-                      {JSON.stringify(message.data, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                )} */}
               </div>
             </div>
           </div>
