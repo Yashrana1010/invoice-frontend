@@ -72,7 +72,7 @@ export default function XeroCallback() {
         console.log('=== SENDING CODE TO BACKEND FOR TOKEN EXCHANGE ===');
 
         // Send the authorization code to your backend
-        const API_BASE_URL = "https://api.invoicemanager.kaifoundry.com";
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
         const response = await axios.post(`${API_BASE_URL}/xero/callback`, {
           code: code,

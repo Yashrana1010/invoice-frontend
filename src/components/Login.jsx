@@ -53,8 +53,8 @@ export default function Login() {
   const handleXeroLogin = () => {
     console.log('=== STARTING XERO OAUTH FLOW ===');
 
-    const clientId = "6B959FB316CE4F5A8A7DC2BDCF5007F3";
-    const redirectUri = "https://invoicemanager.kaifoundry.com/xero/callback";
+    const clientId = import.meta.env.VITE_XERO_CLIENT_ID ;
+    const redirectUri = import.meta.env.VITE_XERO_CALLBACK_URL;
 
     console.log('Client ID:', clientId ? `${clientId.substring(0, 8)}...` : 'MISSING');
     console.log('Redirect URI:', redirectUri);
@@ -66,7 +66,7 @@ export default function Login() {
     }
 
     // Generate a random state for CSRF protection
-    const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const state = 123;
     console.log('Generated state:', state);
 
     // Store state for validation (optional but recommended)
@@ -81,7 +81,7 @@ export default function Login() {
     authUrl.searchParams.append('client_id', clientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
 
-    const scopes = 'openid profile email accounting.settings accounting.reports.read accounting.journals.read accounting.contacts accounting.attachments';
+    const scopes = 'offline_access accounting.transactions openid profile email accounting.contacts accounting.settings';
     authUrl.searchParams.append('scope', scopes);
     authUrl.searchParams.append('state', state);
 

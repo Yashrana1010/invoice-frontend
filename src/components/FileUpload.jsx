@@ -75,7 +75,7 @@ export default function FileUpload({ onUploadSuccess, onUploadError }) {
       formData.append('autoCreate', 'true'); // Auto-create invoice in Xero
 
       const accessToken = localStorage.getItem("token");
-      const response = await axios.post(`https://api.invoicemanager.kaifoundry.com/api/upload/invoice`, formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${accessToken}`,
