@@ -53,8 +53,8 @@ export default function Login() {
   const handleXeroLogin = () => {
     console.log('=== STARTING XERO OAUTH FLOW ===');
 
-    const clientId = import.meta.env.VITE_XERO_CLIENT_ID;
-    const redirectUri = import.meta.env.VITE_XERO_CALLBACK_URL;
+    const clientId = "6B959FB316CE4F5A8A7DC2BDCF5007F3";
+    const redirectUri = "https://invoicemanager.kaifoundry.com/xero/callback";
 
     console.log('Client ID:', clientId ? `${clientId.substring(0, 8)}...` : 'MISSING');
     console.log('Redirect URI:', redirectUri);
